@@ -232,10 +232,16 @@
                         							<input type="date" class="form-control" id="dob" name="dob" required>
                     							</div>
 								</div>
-                    						<div class="form-group pt-3">
-                        						<label for="photo">Upload Photo</label>
-                        						<input type="file" class="form-control-file" id="photo" name="photo" required>
-                    						</div>
+								<div class="row">
+                    							<div class="form-group col-md-6 pt-2">
+                        							<label for="photo">Upload Photo</label>
+                        							<input type="file" class="form-control-file" id="photo" name="photo" required>
+                    							</div>
+									<div id="thumbnailPreview" class="form-group col-md-6 pt-2" >
+
+									</div>
+								</div>
+								
                     
                     						<h6 class="pt-3 text-primary">Contact Details</h6>
                     						<div class="form-group pt-1">

@@ -20,7 +20,9 @@ $(document).ready(function() {
 		$('#contactForm').trigger('reset');
 		$('#saveContactBtn').show();
 		$('#updateContactBtn').hide();
-		$('#errorMessages').empty();	
+		$('#errorMessages').empty();
+		$('#thumbnailPreview').empty();
+			
 		
 	});
 
@@ -29,6 +31,7 @@ $(document).ready(function() {
 		
 		var fileInput = $('#photo')[0];
 		var file=fileInput.files[0];
+		
 
 		var formData = new FormData();
 		formData.append('title', title.val());
@@ -42,7 +45,7 @@ $(document).ready(function() {
 		formData.append('address', address.val());
 		formData.append('street', street.val());
 		formData.append('pincode', pincode.val());
-		formData.append('hobbies', hobbies.val())
+		formData.append('hobbies', hobbies.val());
 		
 		isPublic = $('#isPublic').is(':checked') ? '1' : '0'
 		formData.append('is_public', isPublic);
@@ -82,6 +85,7 @@ $(document).ready(function() {
 		document.getElementById('saveContactBtn').style.display="none";
 		$('#updateContactBtn').show();
 		$('#errorMessages').empty();
+		
 		contactId = $(this).data('id');
 		console.log(contactId);
 		$.ajax({
@@ -106,12 +110,23 @@ $(document).ready(function() {
 				$('#dob').val(formattedDob);
 
 				$('#email').val(data.email);
-				
-				$('#email').val(data.email);
 				$('#phone').val(data.phone);
 				$('#address').val(data.address);
 				$('#street').val(data.street);
 				$('#pincode').val(data.pincode);
+
+				const photopath = data.photo;
+				console.log(photopath);
+				
+				const contactDiv = document.getElementById('thumbnailPreview');
+				contactDiv.innerHTML = '';
+				const imgElement = document.createElement('img');
+				imgElement.src = photopath;
+
+				imgElement.alt = 'Placeholder Image';
+        			imgElement.style.width = '70px'; 
+        			imgElement.style.height = '70px';
+				contactDiv.appendChild(imgElement);
 
 				const hobbies = data.hobby_ids.split(",");
 				$('#hobbies').val(hobbies);

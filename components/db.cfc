@@ -244,7 +244,8 @@
 
 
 		<cfset local.uploadPath = ExpandPath('../uploads/')>
-		<cfif structKeyExists(arguments, "photo") AND arguments.photo NEQ "">
+		
+		<cfif structKeyExists(form, "photo") AND len(form.photo) GT 0 AND form.photo NEQ "undefined">
 			<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
 			<cfset local.originalFileName = local.fileUploadResult.serverFile>
 		
@@ -254,11 +255,34 @@
 		
 			<cfif NOT ListFindNoCase(local.allowedFormats, local.imageExtension)>
         			<cfset arrayAppend(local.errors, "*Invalid image format. Only JPG, JPEG, JFIF and PNG are allowed")>
+			<cfelse>
+				<cfset local.uploadPath = ExpandPath('../Temp/')>
+				<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
+				<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>
+				<cfset arguments['photo'] = local.photopath>
     			</cfif>
+			
+		
+		<cfelseif form.photo EQ "undefined" AND structKeyExists(arguments, 'contactId')>
+			<cfset local.decryptedId = decryptId(arguments.contactId)>
+			<cfquery name="local.getPhotoPath">
+				SELECT 
+					photo
+				FROM
+					contact
+				WHERE
+					idcontact = <cfqueryparam value="#local.decryptedId#" cfsqltype="cf_sql_integer">
+		
+			</cfquery>
+
+			
+			
+			<cfset arguments['photo'] = local.getPhotoPath.photo>
 		<cfelse>
-    			<cfset arrayAppend(local.errors, "*Image is required. Please upload a valid image file.")>
+			
+			<cfset arrayAppend(local.errors, "*Image is required")>
 		</cfif>
-		<cfset arguments['photo'] = local.originalFileName>
+			
 
 
 		
@@ -278,11 +302,26 @@
 		</cfif>
 
 
-		<cfif len(trim(arguments.email)) EQ 0>
-            		<cfset arrayAppend(local.errors, "*Email is required")>
-        	<cfelseif NOT reFindNoCase("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", arguments.email)>
+	
+
+		<cfquery name="local.getContactEmail">
+			SELECT *
+			FROM
+				contact
+			WHERE 
+				email = <cfqueryparam value="#arguments.email#" cfsqltype="cf_sql_varchar">
+		</cfquery>
+		
+
+		<cfif local.getContactEmail.recordCount GT 0 AND NOT structKeyExists(arguments, 'contactId')>
+			<cfset arrayAppend(local.errors, "*Email already exists")>
+		<cfelseif len(trim(arguments.email)) EQ 0>
+			<cfset arrayAppend(local.errors, "*Email is required")>
+		<cfelseif NOT reFindNoCase("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", arguments.email)>
             		<cfset arrayAppend(local.errors, "*Enter a valid email")>
-        	</cfif>
+		</cfif>
+
+		
 
 		
 		<cfif trim(arguments.phone) EQ "" OR not reFind("^\d{10}$", arguments.phone)>
@@ -334,7 +373,7 @@
         	<cfargument name="lastName" type="string" required="true">
         	<cfargument name="gender" type="string" required="true">
         	<cfargument name="dob" type="string" required="true">
-		<cfargument name="photo" type="string" required="true">
+		<cfargument name="photo" type="string" required="false">
 		<cfargument name="address" type="string" required="true">
 		<cfargument name="street" type="string" required="true">
 		<cfargument name="pincode" type="string" required="true">
@@ -345,9 +384,11 @@
 		<cfargument name="contactId" type="string" required="false" default="">
 		
 		
-		<cfset local.uploadPath = ExpandPath('../Temp/')>
+		<!---<cfset local.uploadPath = ExpandPath('../Temp/')>
 		<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
-		<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>
+		<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>--->
+
+		
 		
 
 		<cfif StructKeyExists(arguments, "contactId") AND arguments.contactId NEQ "">
@@ -360,7 +401,7 @@
 					lastname = <cfqueryparam value="#arguments.lastname#" cfsqltype="cf_sql_varchar">,
 					genderid = <cfqueryparam value="#arguments.gender#" cfsqltype="cf_sql_integer">,
 					dob = <cfqueryparam value="#arguments.dob#" cfsqltype="cf_sql_date">,
-					photo = <cfqueryparam value="#local.photopath#" cfsqltype="cf_sql_varchar">,
+					photo = <cfqueryparam value="#arguments.photo#" cfsqltype="cf_sql_varchar">,
 					address = <cfqueryparam value="#arguments.address#" cfsqltype="cf_sql_varchar">,
 					street = <cfqueryparam value="#arguments.street#" cfsqltype="cf_sql_varchar">,
 					pincode = <cfqueryparam value="#arguments.pincode#" cfsqltype="cf_sql_integer">,
@@ -368,7 +409,6 @@
 					phone = <cfqueryparam value="#arguments.phone#" cfsqltype="cf_sql_varchar">,
 					iduser = <cfqueryparam value="#session.userid#" cfsqltype="cf_sql_integer">,
 					is_public = <cfqueryparam value="#arguments.is_public#" cfsqltype="cf_sql_integer">
-					
 					
 				WHERE
 					idcontact = <cfqueryparam value="#local.decryptedId#" cfsqltype="cf_sql_integer">
@@ -451,7 +491,7 @@
 					<cfqueryparam value="#arguments.lastname#" cfsqltype="cf_sql_varchar">,
 					<cfqueryparam value="#arguments.gender#" cfsqltype="cf_sql_integer">,
 					<cfqueryparam value="#arguments.dob#" cfsqltype="cf_sql_date">,
-					<cfqueryparam value="#local.photopath#" cfsqltype="cf_sql_varchar">,
+					<cfqueryparam value="#arguments.photo#" cfsqltype="cf_sql_varchar">,
 					<cfqueryparam value="#arguments.address#" cfsqltype="cf_sql_varchar">,
 					<cfqueryparam value="#arguments.street#" cfsqltype="cf_sql_varchar">,
 					<cfqueryparam value="#arguments.pincode#" cfsqltype="cf_sql_integer">,
@@ -540,9 +580,7 @@
 				}>
 			</cfif>
 
-			
-			<cfset local.response=#serializeJSON(local.singleData)#>
-			<cfreturn local.response>
+			<cfreturn local.singleData>
 		<cfcatch>
 			<cfdump var="#cfcatch#">
 		</cfcatch>
