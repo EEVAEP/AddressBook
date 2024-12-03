@@ -100,7 +100,7 @@ $(document).ready(function() {
 				 
         			$('#titleid').val(data.titleid);
 				$('#firstName').val(data.firstname);
-				$('#lastName').val(data.lastname)
+				$('#lastName').val(data.lastname);
 				$('#gender').val(data.genderid);
 
 				const dob=data.dob;
@@ -124,8 +124,8 @@ $(document).ready(function() {
 				imgElement.src = photopath;
 
 				imgElement.alt = 'Placeholder Image';
-        			imgElement.style.width = '70px'; 
-        			imgElement.style.height = '70px';
+        			imgElement.style.width = '65px'; 
+        			imgElement.style.height = '65px';
 				contactDiv.appendChild(imgElement);
 
 				const hobbies = data.hobby_ids.split(",");
@@ -257,6 +257,31 @@ function addOnError(errors) {
         	$('#errorMessages').append('<div class="alert alert-danger">' + error + '</div>');
  	});
 }
+
+
+
+$(document).on('change', '#photo', function(event) {
+    	const file = event.target.files[0];
+
+    	if (file) {
+        	const reader = new FileReader();
+
+        	reader.onload = function(e) {
+            		const imgElement = document.createElement('img');
+            		imgElement.src = e.target.result;
+            		imgElement.alt = 'Uploaded Image';
+            		imgElement.style.width = '65px';
+            		imgElement.style.height = '65px';
+
+            		const contactDiv = document.getElementById('thumbnailPreview');
+            		contactDiv.innerHTML = ''; 
+            		contactDiv.appendChild(imgElement); 
+        	};
+
+        	reader.readAsDataURL(file); 
+    	}
+});
+
 
 
 

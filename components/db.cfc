@@ -261,8 +261,6 @@
 				<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>
 				<cfset arguments['photo'] = local.photopath>
     			</cfif>
-			
-		
 		<cfelseif form.photo EQ "undefined" AND structKeyExists(arguments, 'contactId')>
 			<cfset local.decryptedId = decryptId(arguments.contactId)>
 			<cfquery name="local.getPhotoPath">
@@ -275,8 +273,6 @@
 		
 			</cfquery>
 
-			
-			
 			<cfset arguments['photo'] = local.getPhotoPath.photo>
 		<cfelse>
 			
@@ -302,8 +298,8 @@
 		</cfif>
 
 
-	
 
+		
 		<cfquery name="local.getContactEmail">
 			SELECT *
 			FROM
@@ -312,7 +308,6 @@
 				email = <cfqueryparam value="#arguments.email#" cfsqltype="cf_sql_varchar">
 		</cfquery>
 		
-
 		<cfif local.getContactEmail.recordCount GT 0 AND NOT structKeyExists(arguments, 'contactId')>
 			<cfset arrayAppend(local.errors, "*Email already exists")>
 		<cfelseif len(trim(arguments.email)) EQ 0>
