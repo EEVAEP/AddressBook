@@ -6,7 +6,7 @@
 	<cfset myFormat.bold="true">
 	<cfset myFormat.alignV="center">
 
-	<cfset data={color="white",fgcolor="grey_50_percent",alignV="center"}>
+	<cfset data={color="white",fgcolor="grey_50_percent", alignV="center"}>
 	<cfset dataHead={color="white",fgcolor="grey_50_percent",bold="true",alignV="center"}>
 
 	<cfset spreadsheetSetCellValue(spreadsheetObj, "TITLE", 1, 1)>

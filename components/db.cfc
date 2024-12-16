@@ -1,11 +1,14 @@
 <cfcomponent>
 	
-	<cffunction name="hashPassword" returntype="string">
-    		<cfargument name="password" required="true" type="string">
-    		<cfset local.hashedPassword = hash(arguments.password, "SHA-512")>
-    		<cfreturn local.hashedPassword>
+	<cffunction name="hashPassword" access="private">
+		<cfargument name="pass" type="string" required="true">
+		<cfargument name="salt" type="string" required="true">
+		<cfset local.saltedPass = arguments.pass & arguments.salt>
+		<cfset local.hashedPass = hash(local.saltedPass,"SHA-256","UTF-8")>	
+		<cfreturn local.hashedPass>
 	</cffunction>
 
+	
 	<cffunction name="decryptId" access="public" returntype="string" output="false">
     		<cfargument name="encryptedId" type="string" required="true">
     		<cfset local.decryptedId = decrypt(arguments.encryptedId, application.encryptionKey, "AES", "Hex")>
@@ -13,6 +16,7 @@
 	</cffunction>
 	
 
+	
 	<cffunction name="validateRegisterInput" access="public" returntype="array">
         
         	<cfargument name="fullname" type="string" required="true">
@@ -81,16 +85,20 @@
     		</cfquery>
 
 		<cfif local.qryCheckUser.recordCount EQ 0>
-			<cfset local.hashedPassword = hashPassword(arguments.password)>
+
+			<cfset local.salt = generateSecretKey("AES")>
+
+			<cfset local.hashedPassword = hashPassword(arguments.password, local.salt)>
 
 			<cfquery>
         			INSERT INTO 
-					register (fullname, email, username, password)
+					register (fullname, email, username, password, salt)
         			VALUES(
 					<cfqueryparam value="#arguments.fullname#" cfsqltype="cf_sql_varchar">,
 					<cfqueryparam value="#arguments.email#" cfsqltype="cf_sql_varchar">,
 					<cfqueryparam value="#arguments.username#" cfsqltype="cf_sql_varchar">,
-            				<cfqueryparam value="#local.hashedPassword#" cfsqltype="cf_sql_varchar">
+            				<cfqueryparam value="#local.hashedPassword#" cfsqltype="cf_sql_varchar">,
+					<cfqueryparam value="#local.salt#" cfsqltype="cf_sql_varchar">
         			)
     			</cfquery>
 			
@@ -113,29 +121,28 @@
     		<cfargument name="password" required="true" type="string">
 		
 		
-    
-        	<cfset local.hashedPassword = hashPassword(arguments.password)>
-		
-		<cfquery name="local.qryLogin">
+    		<cfquery name="local.qryLogin">
         		SELECT 
 				id AS userid,
-				username
+				username,
+				password,
+				salt
         		FROM 
 				register
         		WHERE 
 				username = <cfqueryparam value="#arguments.username#" cfsqltype="cf_sql_varchar">
-        		AND 
-				password = <cfqueryparam value="#local.hashedPassword#" cfsqltype="cf_sql_varchar">
+        		
     		</cfquery>
-	
-		<cfset local.result = {}>
-		
-
-    		<cfif local.qryLogin.recordCount EQ 1>
-        		<cfset local.result['userid'] = local.qryLogin.userid>
-			<cfset local.result['username'] = local.qryLogin.username>
+		<cfif local.qryLogin.recordCount EQ 1>
+			<cfset local.salt = local.qryLogin.salt>
+			<cfset local.hashedPassword  = hashPassword(arguments.password, local.salt)>
+			<cfset local.result = {}>
+			
+			<cfif local.hashedPassword  EQ  local.qryLogin.password>
+        			<cfset local.result['userid'] = local.qryLogin.userid>
+				<cfset local.result['username'] = local.qryLogin.username>
+			</cfif>
 		</cfif>
-    		
 		<cfreturn local.result>
 	</cffunction>
 
@@ -179,13 +186,16 @@
 	</cffunction>
 
 	
-
-	<cffunction name="validateAddEditContactDetails" access="remote" returntype="any" returnformat="JSON">
-			
-		<cfargument name="title" type="string" required="true">
+	
+	<cffunction name="validateAddEditContactDetails" access="public" returntype="any" returnformat="JSON">
+		
+		
+		<cfargument name="title" type="string" required="false">
+		<cfargument name="titleName" type="string" required="false">
 		<cfargument name="firstName" type="string" required="true">
         	<cfargument name="lastName" type="string" required="true">
-        	<cfargument name="gender" type="string" required="true">	
+        	<cfargument name="gender" type="string" required="false">
+		<cfargument name="genderName" type="string" required="false">	
         	<cfargument name="dob" type="string" required="true">
 		<cfargument name="photo" type="string" required="false">
 		<cfargument name="address" type="string" required="true">
@@ -193,25 +203,41 @@
 		<cfargument name="pincode" type="string" required="true">
 		<cfargument name="email" type="string" required="true">
 		<cfargument name="phone" type="string" required="true">
-		<cfargument name="hobbies" type="string" required="true">
+		<cfargument name="hobbies" type="string" required="false">
+		<cfargument name="hobbiesName" type="string" required="true">
 		<cfargument name="is_public" type="string" required="true">
 		<cfargument name="contactId" type="string" required="false">
 
 		
+		
 
 		<cfset local.errors = []>
 
-
-		<cfset local.validTitles = []>
-    		<cfset local.titleQuery = getTitleName()>
-    		<cfloop query="local.titleQuery">
-        		<cfset arrayAppend(local.validTitles, local.titleQuery.idtitle)>
-    		</cfloop>
-		<cfif NOT arrayContains(local.validTitles, arguments.title)>
-        		<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitles, ", "))>
-    		</cfif>
 	
 		
+    		<cfset local.titleQuery = getTitleName()>
+
+		<cfif structKeyExists(arguments, "title")>
+			<cfset local.validTitles = []>
+    			<cfloop query="local.titleQuery">
+        			<cfset arrayAppend(local.validTitles, local.titleQuery.idtitle)>
+    			</cfloop>
+			<cfif NOT arrayContains(local.validTitles, arguments.title)>
+        			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitles, ", "))>
+    			</cfif>
+		</cfif>
+		<cfif structKeyExists(arguments, "titleName")>
+			<cfset local.validTitleNames = []>
+			<cfloop query="local.titleQuery">
+        			<cfset arrayAppend(local.validTitleNames, local.titleQuery.titlename)>
+    			</cfloop>
+			<cfif NOT arrayContains(local.validTitleNames, arguments.titleName)>
+        			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitleNames, ", "))>
+    			</cfif>
+		</cfif>
+	
+			
+
 		<cfif trim(arguments.firstName) EQ "">
         		<cfset arrayAppend(local.errors, "*First Name is required.")>
     		<cfelseif not reFind("^[A-Za-z]+$", trim(arguments.firstName))>
@@ -227,14 +253,28 @@
 
 
 
-		<cfset local.validGender = []>
+		
 		<cfset local.genderQuery= getGenderName()>
-		<cfloop query="local.genderQuery">
-			<cfset arrayAppend(local.validGender, local.genderQuery.idgender)>
-		</cfloop>
-		<cfif NOT arrayContains(local.validGender, arguments.gender)>
-			<cfset arrayAppend(local.errors, "*Enter a valid gender")>
-		</cfif>	
+	
+		<cfif structKeyExists(arguments, "gender")>
+			<cfset local.validGender = []>
+			<cfloop query="local.genderQuery">
+				<cfset arrayAppend(local.validGender, local.genderQuery.idgender)>
+			</cfloop>
+			<cfif NOT arrayContains(local.validGender, arguments.gender)>
+				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
+			</cfif>	
+		</cfif>
+		<cfif structKeyExists(arguments, "genderName")>
+			<cfset local.validGenderName = []>
+			<cfloop query="local.genderQuery">
+				<cfset arrayAppend(local.validGenderName, local.genderQuery.gendername)>
+			</cfloop>
+			<cfif NOT arrayContains(local.validGenderName, arguments.genderName)>
+				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
+			</cfif>	
+		</cfif>
+		
 		
 
 
@@ -243,9 +283,10 @@
     		</cfif>
 
 
-		<cfset local.uploadPath = ExpandPath('../uploads/')>
+		<cfset local.uploadPath = ExpandPath('./uploads/')>
 		
-		<cfif structKeyExists(form, "photo") AND len(form.photo) GT 0 AND form.photo NEQ "undefined">
+		<cfif structKeyExists(form, "photo") AND len(form.photo) GT 0 >
+			
 			<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
 			<cfset local.originalFileName = local.fileUploadResult.serverFile>
 		
@@ -256,13 +297,17 @@
 			<cfif NOT ListFindNoCase(local.allowedFormats, local.imageExtension)>
         			<cfset arrayAppend(local.errors, "*Invalid image format. Only JPG, JPEG, JFIF and PNG are allowed")>
 			<cfelse>
-				<cfset local.uploadPath = ExpandPath('../Temp/')>
+				<cfset local.uploadPath = ExpandPath('./Temp/')>
 				<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
 				<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>
 				<cfset arguments['photo'] = local.photopath>
+				
     			</cfif>
-		<cfelseif form.photo EQ "undefined" AND structKeyExists(arguments, 'contactId')>
+		<cfelseif structKeyExists(arguments, 'contactId') AND len(arguments.contactId) GT 0 AND arguments.photo EQ "">
 			<cfset local.decryptedId = decryptId(arguments.contactId)>
+			
+			
+			
 			<cfquery name="local.getPhotoPath">
 				SELECT 
 					photo
@@ -278,10 +323,9 @@
 			
 			<cfset arrayAppend(local.errors, "*Image is required")>
 		</cfif>
-			
 
 
-		
+
 		<cfif trim(arguments.address) EQ "">
 			<cfset arrayAppend(local.errors, "*Address is required.")>
 		</cfif>
@@ -323,22 +367,32 @@
     			<cfset arrayAppend(local.errors, "*Phone number must contain exactly 10 digits.")>
 		</cfif>
 
-		
-		<cfif Len(arguments.hobbies) EQ 0>
-			<cfset arrayAppend(local.errors, "*Hobby is required")>
-		<cfelse>
-			<cfset local.validHobbies = []>
+		<cfif structKeyExists(arguments, "hobbies")>
+			<cfif Len(arguments.hobbies) EQ 0>
+				<cfset arrayAppend(local.errors, "*Hobby is required")>
+			<cfelse>
+				<cfset local.validHobbies = []>
+				<cfset local.hobbyQuery = getHobbyName()>
+				<cfloop query="local.hobbyquery">
+					<cfset ArrayAppend(local.validHobbies, local.hobbyQuery.idhobby)>
+				</cfloop>
+				<cfset local.selectedHobbiesArray = ListToArray(arguments.hobbies, ",")>
+				<cfloop array="#local.selectedHobbiesArray#" index="local.hobbyID">
+        				<cfif NOT arrayContains(local.validHobbies, local.hobbyID)>
+            					<cfset arrayAppend(local.errors, "*Invalid hobby selected: " & local.hobbyID)>
+        				</cfif>
+    				</cfloop>
+
+			</cfif>
+		</cfif>
+		<cfif structKeyExists(arguments, "hobbiesName")>
+			<cfset local.validHobbiesName = []>
 			<cfset local.hobbyQuery = getHobbyName()>
 			<cfloop query="local.hobbyquery">
-				<cfset ArrayAppend(local.validHobbies, local.hobbyQuery.idhobby)>
+				<cfset ArrayAppend(local.validHobbies, local.hobbyQuery.hobby_name)>
 			</cfloop>
-			<cfset local.selectedHobbiesArray = ListToArray(arguments.hobbies, ",")>
-			<cfloop array="#local.selectedHobbiesArray#" index="local.hobbyID">
-        			<cfif NOT arrayContains(local.validHobbies, local.hobbyID)>
-            				<cfset arrayAppend(local.errors, "*Invalid hobby selected: " & local.hobbyID)>
-        			</cfif>
-    			</cfloop>
-
+			<cfset local.validHobbiesList = arrayToList(local.validHobbiesName)>
+			
 		</cfif>
 
 
@@ -350,6 +404,7 @@
 		
 
 		<cfif arrayLen(local.errors) EQ 0>
+			
 			<cfset local.addUser=createOrUpdateContact(argumentCollection=arguments)>
 				
 			<cfreturn local.errors>
@@ -360,6 +415,7 @@
 		
 
 	</cffunction>
+		
 
 	<cffunction name="createOrUpdateContact" access="public">
 		
@@ -379,14 +435,15 @@
 		<cfargument name="contactId" type="string" required="false" default="">
 		
 		
+		
+		
 		<!---<cfset local.uploadPath = ExpandPath('../Temp/')>
 		<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
 		<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>--->
 
 		
-		
-
 		<cfif StructKeyExists(arguments, "contactId") AND arguments.contactId NEQ "">
+			
 			<cfset local.decryptedId = decryptId(arguments.contactId)>
 			<cfquery>
         			UPDATE contact
@@ -446,24 +503,25 @@
 						
 			</cfquery>
 
-		
-			<cfquery name="local.AddUserHobby">
-				INSERT INTO 
-					user_hobbies(contact_id,
-							hobby_id)
-				VALUES
-				<cfloop array="#local.hobbiesToAdd#" item="local.hobbyIdToAdd" index="local.i">
-					(
-						<cfqueryparam value="#local.decryptedId#" cfsqltype="cf_sql_varchar">,
-						<cfqueryparam value="#local.hobbyIdToAdd#" cfsqltype="cf_sql_varchar">	
-					)
-					<cfif local.i NEQ ArrayLen(local.hobbiesToAdd)>,</cfif>
-				</cfloop>;
-			</cfquery>
-					
+			<cfif arrayLen(local.hobbiesToAdd) GT 0>
+				<cfquery name="local.AddUserHobby">
+					INSERT INTO 
+						user_hobbies(contact_id,
+								hobby_id)
+					VALUES
+					<cfloop array="#local.hobbiesToAdd#" item="local.hobbyIdToAdd" index="local.i">
+						(
+							<cfqueryparam value="#local.decryptedId#" cfsqltype="cf_sql_varchar">,
+							<cfqueryparam value="#local.hobbyIdToAdd#" cfsqltype="cf_sql_varchar">	
+						)
+						<cfif local.i NEQ ArrayLen(local.hobbiesToAdd)>,</cfif>
+					</cfloop>;
+				</cfquery>
+			</cfif>	
 			
 
 		<cfelse>
+			
 			<cfquery name="local.insertContact" result="local.r">
         			INSERT INTO 
 					contact (titleid, 
@@ -530,12 +588,12 @@
                         		c.address,
 					c.street,
 					c.pincode,
-					c.email,
+					c.email,  
 					c.phone,
 					t.titlename,
 					g.gendername,
 					c.is_public,
-					GROUP_CONCAT(h.idhobby) AS hobby_ids,
+					GROUP_CONCAT(h.idhobby) AS hobby_ids,   
 					GROUP_CONCAT(h.hobby_name) AS hobby_names
 				FROM contact c
 				INNER JOIN
@@ -583,7 +641,7 @@
 
 	</cffunction>
 
-
+	<cftry>
 
 	<cffunction name="getTotalUserDetails" access="public" returntype="query">
 		<cfset var local= {}>
@@ -627,11 +685,15 @@
 
 		<cfreturn local.qryPages>
 	</cffunction>
+	<cfcatch>
+		<cfdump var="#cfcatch#">
+	</cfcatch>
+	</cftry>
 
-		
-		
-    
-    	<cffunction name="deleteContact" access="remote" returnformat = "JSON" output="false">
+
+	
+
+	<cffunction name="deleteContact" access="remote" returnformat = "JSON" output="false">
     		<cfargument name="contactId" type="string" required="true">
 		<cfset local.decryptedId = decryptId(arguments.contactId)>
     

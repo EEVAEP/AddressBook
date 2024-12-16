@@ -1,7 +1,89 @@
-   <!--- For pull request ---> 
-<cfset qryPages = application.userService.getTotalUserDetails()>
+
+<cfset variables.title = "">
+<cfset variables.firstName = "">
+<cfset variables.lastName = "">
+<cfset variables.gender = "">
+<cfset variables.dob = "">
+<cfset variables.photo = "">
+<cfset variables.address = "">
+<cfset variables.street = "">
+<cfset variables.pincode = "">
+<cfset variables.email = "">
+<cfset variables.phone = "">
+<cfset variables.hobbies = "">
+<cfset variables.isPublic = "">
+
+<cfset variables.openModal = false>
+<cfset variables.errorMessageHtml = "">
+
+<cfif structKeyExists(form, "submit")>
+	<cfset isPublic = structKeyExists(form, "isPublic") ? "1" : "0">
+	<cfif NOT structKeyExists(form, "hobbies")>
+		<cfset temphobbies = "">
+	<cfelse>
+		<cfset temphobbies = form.hobbies>
+	</cfif>
+	
+	<cfset variables.validationErrorArray = application.userService.validateAddEditContactDetails(title = form.title,
+													firstName = form.firstName,
+													lastName = form.lastName,
+													gender = form.gender,
+													dob = form.dob,
+													photo = form.photo,
+													address  = form.address,
+													street = form.street,
+													pincode = form.pincode,
+													email = form.email,
+													phone = form.phone,
+													hobbies = temphobbies,
+													is_public = isPublic,
+													contactId = form.contactId)>
+	
+
+	<cfset variables.openModal = arrayLen(variables.validationErrorArray) GT 0>
+	<cfif variables.openModal>
+		<cfset variables.title = form.title>
+		<cfset variables.firstName = form.firstName>
+		<cfset variables.lastName = form.lastName>
+		<cfset variables.gender = form.gender>
+		<cfset variables.dob = form.dob>
+		<cfset variables.address = form.address>
+		<cfset variables.street = form.street>
+		<cfset variables.pincode = form.pincode>
+		<cfset variables.email = form.email>
+		<cfset variables.phone = form.phone>
+		<cfset variables.hobbies = temphobbies>
+		<cfset variables.isPublic = isPublic>
+
+		
+		<cfset variables.errorMessageHtml = '<ul><li>'& arrayToList(variables.validationErrorArray, '</li><li>')&'</li></ul>'>
+		
+	<cfelse>
+		<cfset variables.errorMessageHtml = "">
+	</cfif>
+</cfif>
+
+<cfif variables.openModal>
+	<script>
+    			document.addEventListener("DOMContentLoaded", function () {
+			document.getElementById('updateContactBtn').style.display = 'none';
+
+        		var errorMessages = "<cfoutput>#JSStringFormat(variables.errorMessageHtml)#</cfoutput>";
+			document.getElementById("errorMessages").innerHTML = errorMessages;
+	
+           		var modal = new bootstrap.Modal(document.getElementById('createContactModal'));
+            		modal.show();   
+        	
+    		});
+		
+	</script>
+
+
+</cfif>
+
 
 <cftry>
+	<cfset qryPages = application.userService.getTotalUserDetails()>
 	<cfset contactData = []> 
 	<cfloop from="1" to="#qryPages.recordCount#" index="i">
 		<cfset encryptedId = encrypt(qryPages.idcontact[i], application.encryptionKey, "AES", "Hex")>
@@ -18,7 +100,7 @@
     		</cfloop>
 
 		<cfset contact = {
-			"id" : encryptedId,
+			"id" : encryptedId, 
 			"titleFullname" : qryPages.titleFullname[i],
         		"firstname" : qryPages.firstname[i],
 			"lastname" : qryPages.lastname[i],
@@ -35,8 +117,8 @@
 			"gendername":qryPages.gendername[i],
 			"hobbies": hobbiesArray, 
         		"hobbiesId": hobbyIdsArray,
-			"hobbyNames":hobbyNamesList
-			
+			"hobbyNames":hobbyNamesList,
+			"publicContact":qryPages.is_public
     		}>
     		<cfset arrayAppend(contactData, contact)>
 	</cfloop>
@@ -74,6 +156,7 @@
         		<header class="custom-bg text-white d-flex justify-content-between align-items-center py-3 px-4 fixed-top">
             			<h2 class="m-0 addresshead">ADDRESS BOOK</h2>
             			<a href="login.cfm?logOut" class="btn btn-light">Logout</a>
+				
 
 			</header>
 			
@@ -95,6 +178,15 @@
 						data-bs-toggle="modal" data-bs-target="#createContactModal">
 						Create Contact
 					</button>
+
+					<button type="button" 
+						id="excelUploadBtn"
+						name="excelSubmit"
+						class="btn btn-primary w-100 mb-4 upload" 
+                    				data-bs-toggle="modal" 
+                    				data-bs-target="#excelUploadModal">
+						Upload
+            				</button>
 
             			</div>
 				<div class="col-lg-9 col-md-8 p-4 mt-2">
@@ -148,7 +240,8 @@
                     										data-bs-target="##createContactModal"
                     										data-id="#encryptedId#">
 												EDIT
-            										</button>
+												
+											</button>
             										<button class="btn btn-sm btn-outline-danger me-2 delete #value#"
                     										data-bs-toggle="modal" 
                     										data-bs-target="##deleteConfirmModal"
@@ -194,21 +287,29 @@
 		
 									<cfset titleNameQuery = application.userService.getTitleName()>
 										<div class="form-group col-md-2">
+
                         							<label for="title">Title</label>
                         							<select class="form-control" id="title" name="title">
                             								<cfoutput query="titleNameQuery">
-                        									<option value="#titleNameQuery.idtitle#">#titleNameQuery.titlename#</option>
+                        									<!---<option value="#titleNameQuery.idtitle#">#titleNameQuery.titlename#</option>--->
+												<option 
+            												value="#titleNameQuery.idtitle#" 
+            												<cfif titleNameQuery.idtitle EQ variables.title>selected</cfif>>
+            													#titleNameQuery.titlename#
+        											</option>
                     									</cfoutput>
                         							</select>
                     							</div>
 									
                     							<div class="form-group col-md-5">
                         							<label for="firstName">First Name</label>
-                        							<input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter First Name" required>
+                        							<input type="text" class="form-control" id="firstName" name="firstName" value="<cfoutput>#variables.firstName#</cfoutput>" 
+											placeholder="Enter First Name" >
                     							</div>
                     							<div class="form-group col-md-5">
                         							<label for="lastName">Last Name</label>
-                        							<input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter Last Name" required>
+                        							<input type="text" class="form-control" id="lastName" name="lastName" value="<cfoutput>#variables.lastName#</cfoutput>" 
+											placeholder="Enter Last Name" >
                     							</div>
 								</div>
 								<div class="row">
@@ -219,7 +320,12 @@
                         							<label for="gender">Gender</label>
                         							<select class="form-control" id="gender" name="gender">
 											<cfoutput query="genderNameQuery">
-                            									<option value="#genderNameQuery.idgender#">#genderNameQuery.gendername#</option>
+                            									<!---<option value="#genderNameQuery.idgender#">#genderNameQuery.gendername#</option>--->
+												<option 
+            												value="#genderNameQuery.idgender#" 
+            												<cfif genderNameQuery.idgender EQ variables.gender>selected</cfif>>
+            													#genderNameQuery.gendername#
+        											</option>
 											</cfoutput>
                         							</select>
                     							</div>
@@ -229,13 +335,13 @@
 									</cftry>
                     							<div class="form-group col-md-6 pt-2">
                         							<label for="dob">Date of Birth</label>
-                        							<input type="date" class="form-control" id="dob" name="dob" required>
+                        							<input type="date" class="form-control" id="dob" name="dob" value="<cfoutput>#variables.dob#</cfoutput>">
                     							</div>
 								</div>
 								<div class="row">
                     							<div class="form-group col-md-6 pt-2">
                         							<label for="photo">Upload Photo</label>
-                        							<input type="file" class="form-control-file" id="photo" name="photo" required>
+                        							<input type="file" class="form-control-file" id="photo" name="photo">
                     							</div>
 									<div id="thumbnailPreview" class="form-group col-md-6 pt-2" >
 
@@ -246,23 +352,23 @@
                     						<h6 class="pt-3 text-primary">Contact Details</h6>
                     						<div class="form-group pt-1">
                         						<label for="address">Address</label>
-                        						<input type="text" class="form-control" id="address" name="address" placeholder="Enter Address" required>
+                        						<input type="text" class="form-control" id="address" name="address" placeholder="Enter Address" value="<cfoutput>#variables.address#</cfoutput>">
                     						</div>
 								<div class="form-group pt-1">
                         						<label for="address">Street</label>
-                        						<input type="text" class="form-control" id="street" name="street" placeholder="Enter Address" required>
+                        						<input type="text" class="form-control" id="street" name="street" placeholder="Enter Address" value="<cfoutput>#variables.street#</cfoutput>">
                     						</div>
                     						<div class="form-group pt-1">
                         						<label for="pincode">Pincode</label>
-                        						<input type="text" class="form-control" id="pincode" name="pincode" placeholder="Enter Pincode" required>
+                        						<input type="text" class="form-control" id="pincode" name="pincode" placeholder="Enter Pincode" value="<cfoutput>#variables.pincode#</cfoutput>">
                     						</div>
                     						<div class="form-group pt-1">
                         						<label for="email">Email</label>
-                        						<input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" required>
+                        						<input type="email" class="form-control" id="email" name="email" placeholder="Enter Email" value="<cfoutput>#variables.email#</cfoutput>">
                     						</div>
                     						<div class="form-group pt-1">
                         						<label for="phone">Phone</label>
-                        						<input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter Phone Number" required>
+                        						<input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter Phone Number" value="<cfoutput>#variables.phone#</cfoutput>">
                     						</div>
 
 								<div class="form-group col-md-6 pt-2">
@@ -270,22 +376,26 @@
     									<label for="hobbies">Hobbies</label>
     									<select class="form-control" id="hobbies" name="hobbies" multiple size="5">
         									<cfoutput query="hobbyQuery">
-            										<option value="#hobbyQuery.idhobby#">
-												#hobbyQuery.hobby_name#
-											</option>
+            										
+											 <option 
+                										value="#hobbyQuery.idhobby#" 
+                										<cfif listFind(variables.hobbies, hobbyQuery.idhobby)>selected</cfif>>
+                											#hobbyQuery.hobby_name#
+            										</option>
+											
         									</cfoutput>
     									</select>
 								</div>
 								<div class="form-group pt-1">
 									<label for="isPublic" class="form-check-label">Make this contact public:</label>
-									<input type="checkbox" id="isPublic"  name="isPublic">
+									<input type="checkbox" id="isPublic"  name="isPublic" <cfif variables.isPublic EQ "true">checked</cfif>>
 								</div>
 								
 								<div>
 									<button id="saveContactBtn" type="submit" name="submit" class="btn btn-primary mt-3 mb-4 mx-auto col-md-5">Save Contact</button>
-									<button id="updateContactBtn" name="updateSubmit" class="btn btn-primary mt-2 mb-4 mx-auto col-md-5">Update Contact</button>
+									<button id="updateContactBtn" name="submit" class="btn btn-primary mt-2 mb-4 mx-auto col-md-5">Update Contact</button>
 								</div>
-								
+								<input type="hidden" id="contactId" name="contactId">
 								<div id="errorMessages"></div>
 								
                 					</form>
@@ -396,6 +506,49 @@
         				</div>
     				</div>
 			</div>
+
+			
+			<div class="modal fade" 
+     				id="excelUploadModal"
+				data-bs-backdrop="static" 
+     				data-bs-keyboard="false" 
+     				tabindex="-1" 
+     				aria-labelledby="excelUploadModal" 
+     				aria-hidden="true">
+    				<div class="modal-dialog modal-lg">
+        				<div class="modal-content">
+           
+            					<div class="modal-header">
+                					<h5 class="modal-title mx-auto fw-bold" id="excelUploadModal">Upload Excel File</h5>
+                					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            					</div>
+
+           
+            					<div class="modal-body">
+                					<div class="d-flex justify-content-end mb-3">
+                    						<button type="button" class="btn btn-sm btn-primary me-2" onclick="window.location.href='excelPage.cfm'">Template with data</button>
+                    						<button type="button" class="btn btn-sm btn-success" onclick="window.location.href='excelPlainTemplate.cfm'">Plain Template</button>
+                					</div>
+
+              						<form method="post" id="excelUploadForm" action="" enctype="multipart/form-data" class="text-center">
+                    						<div class="mb-3">
+                        						<label for="excelFile" class="form-label fw-bold">Upload Excel<span class="text-danger">*</span></label>
+                        						<input type="file" class="form-control mx-auto w-50" id="excelFile" name="excelFile" required>
+                    						</div>
+                    						<div>
+                        						<button id="uploadFileBtn" type="submit" name="UploadSubmit" class="btn btn-primary me-2">Submit</button>
+                        						<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    						</div>
+                					</form>
+            					</div>
+        				</div>
+    				</div>
+			</div>
+			<cfif structKeyExists(form, "UploadSubmit")>
+				<cfinclude template="Uploadexcel.cfm">
+				
+			</cfif>
+
 			
 		</div>
 		<script src="./js/bootstrap.min.js"></script>
@@ -404,6 +557,8 @@
 		<script src="./js/deleteScript.js"></script>
 		<script src="./js/addScript.js"></script>
 		<script src="./js/pdfScript.js"></script>
+		<script src="./js/contactForm.js"></script>
+		<script src="./js/viewScript.js"></script>
 		
 	</body>
 </html>

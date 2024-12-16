@@ -1,6 +1,7 @@
 
 $(document).ready(function() {
 	var contactId;
+
 	var title=$('#title');
 	var firstName=$('#firstName');
 	var lastName=$('#lastName');
@@ -20,66 +21,12 @@ $(document).ready(function() {
 		$('#contactForm').trigger('reset');
 		$('#saveContactBtn').show();
 		$('#updateContactBtn').hide();
-		$('#errorMessages').empty();
 		$('#thumbnailPreview').empty();
-			
 		
 	});
+	
 
-	$('#saveContactBtn').click(function(event) {
-        	event.preventDefault();
-		
-		var fileInput = $('#photo')[0];
-		var file=fileInput.files[0];
-		
-
-		var formData = new FormData();
-		formData.append('title', title.val());
-		formData.append('firstName', firstName.val());
-		formData.append('lastName', lastName.val());
-		formData.append('gender', gender.val());
-		formData.append('dob', cntdob.val());
-		formData.append('photo', file);
-		formData.append('email', email.val());
-		formData.append('phone', phone.val());
-		formData.append('address', address.val());
-		formData.append('street', street.val());
-		formData.append('pincode', pincode.val());
-		formData.append('hobbies', hobbies.val());
-		
-		isPublic = $('#isPublic').is(':checked') ? '1' : '0'
-		formData.append('is_public', isPublic);
-
-		
-		for (let [key, value] of formData.entries()) {
-   		 	console.log(key + ':', value);
-		}
-
-
-		$.ajax({
-			url:'components/db.cfc?method=validateAddEditContactDetails',
-			type:'POST',
-			data:formData,
-			processData:false,
-			contentType:false,
-			success:function(response){
-				let data = JSON.parse(response);
-				console.log(data);	
-				if(data.length === 0){
-					$('#createContactModal').modal('hide');
-					location.reload();
-				}
-				else{
-					addOnError(data);
-				}
-				
-			},
-			error:function(){
-				console.log("Request Failed");
-			}
-		});
-	});
-
+	
 
 	$(document).on('click', '.edit', function() {
 		document.getElementById('saveContactBtn').style.display="none";
@@ -88,6 +35,9 @@ $(document).ready(function() {
 		
 		contactId = $(this).data('id');
 		console.log(contactId);
+
+		$('#contactId').val(contactId);
+
 		$.ajax({
 			url:'components/db.cfc?method=getDataById',
 			type:'POST',
@@ -150,59 +100,7 @@ $(document).ready(function() {
 	});
 
 
-	$('#updateContactBtn').on('click',function(event){	
-		event.preventDefault();
-		
-		var fileInput = $('#photo')[0];
-		var file=fileInput.files[0];
-
-
-		var formData = new FormData();
-		formData.append('title', title.val());
-		formData.append('firstName', firstName.val());
-		formData.append('lastName', lastName.val());
-		formData.append('gender', gender.val());
-		formData.append('dob', cntdob.val());
-		formData.append('photo', file);
-		formData.append('email', email.val());
-		formData.append('phone', phone.val());
-		formData.append('address', address.val());
-		formData.append('street', street.val());
-		formData.append('pincode', pincode.val());
-		formData.append('hobbies',hobbies.val());
-		formData.append('contactId',contactId);
-
-		isPublic = $('#isPublic').is(':checked') ? '1' : '0'
-		formData.append('is_public', isPublic);
-
-		for (let [key, value] of formData.entries()) {
-   		 	console.log(key + ':', value);
-		}
-
-		$.ajax({
-			url:'components/db.cfc?method=validateAddEditContactDetails',
-			type:'POST',
-			data:formData,
-			processData:false,
-			contentType:false,
-			success:function(response){
-				let data = JSON.parse(response);
-				console.log(data);	
-				if(data.length === 0){
-					$('#createContactModal').modal('hide');
-					location.reload();
-				}
-				else{
-					addOnError(data);
-				}
-				
-			},
-			error:function(){
-				console.log("Request Failed");
-			}
-		});
-
-	});
+	
 
 
 	$(document).on('click', '.view', function() {
@@ -250,13 +148,13 @@ $(document).ready(function() {
 
 });
 
-function addOnError(errors) {
+/*function addOnError(errors) {
 	$('#errorMessages').empty();
 
 	 errors.forEach(function(error) {
         	$('#errorMessages').append('<div class="alert alert-danger">' + error + '</div>');
  	});
-}
+}*/
 
 
 
@@ -279,7 +177,7 @@ $(document).on('change', '#photo', function(event) {
         	};
 
         	reader.readAsDataURL(file); 
-    	}
+    	}   
 });
 
 
