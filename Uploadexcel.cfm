@@ -48,7 +48,8 @@
         									email = row.email,
         									phone = row.phone,
         									hobbiesName = row.hobbies,
-        									is_public = row.is_public
+        									is_public = row.is_public,
+										is_excel = 1
     		)>
    
     		<cfset arrayAppend(validatedData, result)>
