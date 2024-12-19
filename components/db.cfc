@@ -207,10 +207,9 @@
 		<cfargument name="hobbiesName" type="string" required="true">
 		<cfargument name="is_public" type="string" required="true">
 		<cfargument name="contactId" type="string" required="false">
+		<cfargument name="is_excel" type="numeric" required="false">
 
 		
-		
-
 		<cfset local.errors = []>
 
 	
@@ -233,6 +232,18 @@
     			</cfloop>
 			<cfif NOT arrayContains(local.validTitleNames, arguments.titleName)>
         			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitleNames, ", "))>
+			<cfelse>
+				<cfquery name="local.getTitleId">
+            				SELECT 
+                				idtitle
+            				FROM 
+                				title
+           				WHERE 
+                				titlename = <cfqueryparam value="#arguments.titleName#" cfsqltype="cf_sql_varchar">
+        			</cfquery>
+				<cfif local.getTitleId.recordCount EQ 1>
+            				<cfset arguments['title'] = local.getTitleId.idtitle>
+				</cfif>
     			</cfif>
 		</cfif>
 	
@@ -272,6 +283,19 @@
 			</cfloop>
 			<cfif NOT arrayContains(local.validGenderName, arguments.genderName)>
 				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
+			<cfelse>
+				<cfquery name="local.getGenderId">
+            				SELECT 
+                				idgender
+            				FROM 
+                				gender
+           				WHERE 
+                				gendername = <cfqueryparam value="#arguments.genderName#" cfsqltype="cf_sql_varchar">
+        			</cfquery>
+				<cfif local.getGenderId.recordCount EQ 1>
+            				<cfset arguments['gender'] = local.getGenderId.idgender>
+				</cfif>
+    			
 			</cfif>	
 		</cfif>
 		
@@ -319,9 +343,13 @@
 			</cfquery>
 
 			<cfset arguments['photo'] = local.getPhotoPath.photo>
+		<cfelseif structKeyExists(arguments, "is_excel") AND arguments.is_excel EQ 1 AND  (NOT structKeyExists(arguments, 'contactId'))>
+			<cfset local.photopath = "./Temp/user.png">
+			<cfset arguments['photo'] = local.photopath>
 		<cfelse>
-			
-			<cfset arrayAppend(local.errors, "*Image is required")>
+			<cfif NOT structKeyExists(arguments, "is_excel") OR arguments.is_excel NEQ 1>
+				<cfset arrayAppend(local.errors, "*Image is required")>
+			</cfif>
 		</cfif>
 
 
@@ -341,7 +369,7 @@
 			<cfset arrayAppend(local.errors, "*pincode length must be less than 9")>
 		</cfif>
 
-
+		
 
 		
 		<cfquery name="local.getContactEmail">
@@ -362,12 +390,14 @@
 
 		
 
-		
 		<cfif trim(arguments.phone) EQ "" OR not reFind("^\d{10}$", arguments.phone)>
+			
     			<cfset arrayAppend(local.errors, "*Phone number must contain exactly 10 digits.")>
 		</cfif>
+		
 
-		<cfif structKeyExists(arguments, "hobbies")>
+		<!---<cfif structKeyExists(arguments, "hobbies")>
+			
 			<cfif Len(arguments.hobbies) EQ 0>
 				<cfset arrayAppend(local.errors, "*Hobby is required")>
 			<cfelse>
@@ -384,16 +414,45 @@
     				</cfloop>
 
 			</cfif>
-		</cfif>
+		</cfif>--->
 		<cfif structKeyExists(arguments, "hobbiesName")>
 			<cfset local.validHobbiesName = []>
 			<cfset local.hobbyQuery = getHobbyName()>
-			<cfloop query="local.hobbyquery">
-				<cfset ArrayAppend(local.validHobbies, local.hobbyQuery.hobby_name)>
-			</cfloop>
-			<cfset local.validHobbiesList = arrayToList(local.validHobbiesName)>
 			
+			<cfset local.validHobbiesList = valueList(local.hobbyQuery.hobby_name)>
+			
+			<cfset local.invalidHobby = []>
+			<cfset local.HobbiesArray = ListToArray(arguments.hobbiesName)>
+			
+			<cfloop array="#local.HobbiesArray#" index="hobby">
+				
+        			<cfif NOT listFindNoCase(local.validHobbiesList, hobby)>
+					<cfset arrayAppend(local.invalidHobby, hobby)>
+				</cfif>
+        			
+    			</cfloop>
+			
+			<cfif arrayLen(local.invalidHobby) GT 0>
+				<cfset arrayAppend(local.errors, "*The hobby must be one of the following" )>
+			<cfelse>
+				 <cfquery name="local.getHobbyIds">
+            				SELECT 
+                				idhobby 
+            				FROM 
+                				hobbies_sample
+            				WHERE 
+                				hobby_name IN (<cfqueryparam value="#arguments.hobbiesName#" cfsqltype="cf_sql_varchar" list="true">)
+        			</cfquery>
+				<cfif local.getHobbyIds.recordCount GT 0>
+            				<cfset local.hobbyIdList = valueList(local.getHobbyIds.idhobby)>
+           				<cfset arguments['hobbies'] = local.hobbyIdList>
+				</cfif>
+			
+			</cfif>
 		</cfif>
+		
+
+
 
 
 		<cfset local.isValidPublic  = ["0", "1"]>
@@ -420,6 +479,7 @@
 	<cffunction name="createOrUpdateContact" access="public">
 		
 		<cfargument name="title" type="string" required="true">
+		
 		<cfargument name="firstName" type="string" required="true">
         	<cfargument name="lastName" type="string" required="true">
         	<cfargument name="gender" type="string" required="true">
@@ -433,14 +493,10 @@
 		<cfargument name="hobbies" type="string" required="false">
 		<cfargument name="is_public" type="string" required="true">
 		<cfargument name="contactId" type="string" required="false" default="">
+		<cfargument name="is_excel" type="numeric" required="false">
 		
 		
 		
-		
-		<!---<cfset local.uploadPath = ExpandPath('../Temp/')>
-		<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
-		<cfset local.photopath = "./Temp/" & local.fileUploadResult.serverFile>--->
-
 		
 		<cfif StructKeyExists(arguments, "contactId") AND arguments.contactId NEQ "">
 			
