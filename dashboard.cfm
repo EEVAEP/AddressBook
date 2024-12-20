@@ -40,7 +40,7 @@
 													contactId = form.contactId)>
 	
 
-	<cfset variables.openModal = arrayLen(variables.validationErrorArray) GT 0>
+	<cfset variables.openModal = arrayLen(variables.validationErrorArray.errors) GT 0>
 	<cfif variables.openModal>
 		<cfset variables.title = form.title>
 		<cfset variables.firstName = form.firstName>
@@ -56,12 +56,13 @@
 		<cfset variables.isPublic = isPublic>
 
 		
-		<cfset variables.errorMessageHtml = '<ul><li>'& arrayToList(variables.validationErrorArray, '</li><li>')&'</li></ul>'>
+		<cfset variables.errorMessageHtml = '<ul><li>'& arrayToList(variables.validationErrorArray.errors, '</li><li>')&'</li></ul>'>
 		
 	<cfelse>
 		<cfset variables.errorMessageHtml = "">
 	</cfif>
 </cfif>
+
 
 <cfif variables.openModal>
 	<script>
@@ -80,6 +81,13 @@
 
 
 </cfif>
+
+
+<cfif structKeyExists(form, "UploadSubmit")>
+	<cfinclude template="Uploadexcel.cfm">
+	
+</cfif>
+
 
 
 <cftry>
@@ -196,6 +204,14 @@
                 						<button class="btn btn-primary me-2" onclick="generatePdf()">PDF</button>
                     						<button class="btn btn-primary me-2" onclick="window.location.href='excelPage.cfm'">Export Excel</button>
                     						<button class="btn btn-primary me-2 no-print" media="print" onclick="window.print()">Print</button>
+								<cfif structKeyExists(form, "UploadSubmit")>
+									<cfoutput>
+        									<!---<a href="ResultExcel.cfm?filePath=#URLEncodedFormat(resultFilePath)#" target="_self">Result File</a>--->
+										<button class="btn btn-primary me-2" onclick="window.location.href='ResultExcel.cfm?filePath=#URLEncodedFormat(resultFilePath)#'">Result</button>
+
+    									</cfoutput>
+		
+								</cfif>
 								
                 					</div>
 						</div>
@@ -544,10 +560,7 @@
         				</div>
     				</div>
 			</div>
-			<cfif structKeyExists(form, "UploadSubmit")>
-				<cfinclude template="Uploadexcel.cfm">
-				
-			</cfif>
+			
 
 			
 		</div>
