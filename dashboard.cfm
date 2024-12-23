@@ -533,7 +533,7 @@
               						<form method="post" id="excelUploadForm" action="" enctype="multipart/form-data" class="text-center">
                     						<div class="mb-3">
                         						<label for="excelFile" class="form-label fw-bold">Upload Excel<span class="text-danger">*</span></label>
-                        						<input type="file" class="form-control mx-auto w-50" id="excelFile" name="excelFile" required>
+                        						<input type="file" accept=".xls,.xlsx" class="form-control mx-auto w-50" id="excelFile" name="excelFile" required>
                     						</div>
                     						<div>
                         						<button id="uploadFileBtn" type="submit" name="UploadSubmit" class="btn btn-primary me-2">Submit</button>

@@ -11,7 +11,7 @@
     	<cffunction name="onApplicationStart" returnType="boolean">
 		<cfset application.userService = createObject("component","components.db")>
 		<cfset application.encryptionKey = generateSecretKey("AES")>
-        	<cfreturn true>
+		<cfreturn true>
     	</cffunction>
 	
     	<cffunction name="onRequestStart" returnType="void">

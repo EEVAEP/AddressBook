@@ -190,11 +190,11 @@
 	<cffunction name="validateAddEditContactDetails" access="public" returntype="any" returnformat="JSON">
 		
 		
-		<cfargument name="title" type="string" required="false">
+		<cfargument name="title" type="numeric" required="false">
 		<cfargument name="titleName" type="string" required="false">
 		<cfargument name="firstName" type="string" required="true">
         	<cfargument name="lastName" type="string" required="true">
-        	<cfargument name="gender" type="string" required="false">
+        	<cfargument name="gender" type="numeric" required="false">
 		<cfargument name="genderName" type="string" required="false">	
         	<cfargument name="dob" type="string" required="true">
 		<cfargument name="photo" type="string" required="false">
@@ -204,8 +204,13 @@
 		<cfargument name="email" type="string" required="true">
 		<cfargument name="phone" type="string" required="true">
 		<cfargument name="hobbies" type="string" required="false">
+<<<<<<< Updated upstream
 		<cfargument name="hobbiesName" type="string" required="true">
 		<cfargument name="is_public" type="string" required="true">
+=======
+		<cfargument name="hobbiesName" type="string" required="false">
+		<cfargument name="is_public" type="numeric" required="true">
+>>>>>>> Stashed changes
 		<cfargument name="contactId" type="string" required="false">
 		<cfargument name="is_excel" type="numeric" required="false">
 
@@ -214,12 +219,15 @@
 
 	
 		
+<<<<<<< Updated upstream
     		<cfset local.titleQuery = getTitleName()>
 
+=======
+>>>>>>> Stashed changes
 		<cfif structKeyExists(arguments, "title")>
 			<cfset local.validTitles = []>
-    			<cfloop query="local.titleQuery">
-        			<cfset arrayAppend(local.validTitles, local.titleQuery.idtitle)>
+    			<cfloop query="application.titleQuery">
+        			<cfset arrayAppend(local.validTitles, application.titleQuery.idtitle)>
     			</cfloop>
 			<cfif NOT arrayContains(local.validTitles, arguments.title)>
         			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitles, ", "))>
@@ -227,17 +235,17 @@
 		</cfif>
 		<cfif structKeyExists(arguments, "titleName")>
 			<cfset local.validTitleNames = []>
-			<cfloop query="local.titleQuery">
-        			<cfset arrayAppend(local.validTitleNames, local.titleQuery.titlename)>
+			<cfloop query="application.titleQuery">
+        			<cfset arrayAppend(local.validTitleNames, application.titleQuery.titlename)>
     			</cfloop>
 			<cfif NOT arrayContains(local.validTitleNames, arguments.titleName)>
         			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitleNames, ", "))>
 			<cfelse>
-				<cfquery name="local.getTitleId">
+				<cfquery name="local.getTitleId" dbtype="query">
             				SELECT 
                 				idtitle
             				FROM 
-                				title
+                				application.titleQuery
            				WHERE 
                 				titlename = <cfqueryparam value="#arguments.titleName#" cfsqltype="cf_sql_varchar">
         			</cfquery>
@@ -265,12 +273,10 @@
 
 
 		
-		<cfset local.genderQuery= getGenderName()>
-	
 		<cfif structKeyExists(arguments, "gender")>
 			<cfset local.validGender = []>
-			<cfloop query="local.genderQuery">
-				<cfset arrayAppend(local.validGender, local.genderQuery.idgender)>
+			<cfloop query="application.genderQuery">
+				<cfset arrayAppend(local.validGender, application.genderQuery.idgender)>
 			</cfloop>
 			<cfif NOT arrayContains(local.validGender, arguments.gender)>
 				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
@@ -278,17 +284,17 @@
 		</cfif>
 		<cfif structKeyExists(arguments, "genderName")>
 			<cfset local.validGenderName = []>
-			<cfloop query="local.genderQuery">
-				<cfset arrayAppend(local.validGenderName, local.genderQuery.gendername)>
+			<cfloop query="application.genderQuery">
+				<cfset arrayAppend(local.validGenderName, application.genderQuery.gendername)>
 			</cfloop>
 			<cfif NOT arrayContains(local.validGenderName, arguments.genderName)>
 				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
 			<cfelse>
-				<cfquery name="local.getGenderId">
+				<cfquery name="local.getGenderId" dbtype="query">
             				SELECT 
                 				idgender
             				FROM 
-                				gender
+                				application.genderQuery
            				WHERE 
                 				gendername = <cfqueryparam value="#arguments.genderName#" cfsqltype="cf_sql_varchar">
         			</cfquery>
@@ -329,8 +335,6 @@
     			</cfif>
 		<cfelseif structKeyExists(arguments, 'contactId') AND len(arguments.contactId) GT 0 AND arguments.photo EQ "">
 			<cfset local.decryptedId = decryptId(arguments.contactId)>
-			
-			
 			
 			<cfquery name="local.getPhotoPath">
 				SELECT 
@@ -373,15 +377,27 @@
 
 		
 		<cfquery name="local.getContactEmail">
-			SELECT *
+			SELECT idcontact
 			FROM
 				contact
 			WHERE 
 				email = <cfqueryparam value="#arguments.email#" cfsqltype="cf_sql_varchar">
 		</cfquery>
 		
+<<<<<<< Updated upstream
 		<cfif local.getContactEmail.recordCount GT 0 AND NOT structKeyExists(arguments, 'contactId')>
 			<cfset arrayAppend(local.errors, "*Email already exists")>
+=======
+		
+		<cfif local.getContactEmail.recordCount GT 0 AND (NOT structKeyExists(arguments, 'contactId') OR len(trim(arguments.contactId)) EQ 0)>
+			
+			<cfif NOT structKeyExists(arguments, "is_excel")>
+				<cfset arrayAppend(local.result.errors, "*Email already exists")>
+			<cfelse>
+				<cfset local.result.remarks = "UPDATED">
+				<cfset arguments['contactId'] = local.getContactEmail.idcontact>
+			</cfif>
+>>>>>>> Stashed changes
 		<cfelseif len(trim(arguments.email)) EQ 0>
 			<cfset arrayAppend(local.errors, "*Email is required")>
 		<cfelseif NOT reFindNoCase("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", arguments.email)>
@@ -402,9 +418,9 @@
 				<cfset arrayAppend(local.errors, "*Hobby is required")>
 			<cfelse>
 				<cfset local.validHobbies = []>
-				<cfset local.hobbyQuery = getHobbyName()>
-				<cfloop query="local.hobbyquery">
-					<cfset ArrayAppend(local.validHobbies, local.hobbyQuery.idhobby)>
+				
+				<cfloop query="application.hobbyquery">
+					<cfset ArrayAppend(local.validHobbies, application.hobbyQuery.idhobby)>
 				</cfloop>
 				<cfset local.selectedHobbiesArray = ListToArray(arguments.hobbies, ",")>
 				<cfloop array="#local.selectedHobbiesArray#" index="local.hobbyID">
@@ -417,11 +433,9 @@
 		</cfif>--->
 		<cfif structKeyExists(arguments, "hobbiesName")>
 			<cfset local.validHobbiesName = []>
-			<cfset local.hobbyQuery = getHobbyName()>
-			
-			<cfset local.validHobbiesList = valueList(local.hobbyQuery.hobby_name)>
-			
+			<cfset local.validHobbiesList = valueList(application.hobbyQuery.hobby_name)>
 			<cfset local.invalidHobby = []>
+<<<<<<< Updated upstream
 			<cfset local.HobbiesArray = ListToArray(arguments.hobbiesName)>
 			
 			<cfloop array="#local.HobbiesArray#" index="hobby">
@@ -431,15 +445,24 @@
 				</cfif>
         			
     			</cfloop>
+=======
+			<cfloop list="#arguments.hobbiesName#" index="local.i">
+				<cfset local.i = trim(local.i)>
+        			<cfif NOT listFindNoCase(local.validHobbiesList, local.i)>
+					
+					<cfset arrayAppend(local.invalidHobby, local.i)>
+				</cfif>
+			</cfloop>
+>>>>>>> Stashed changes
 			
 			<cfif arrayLen(local.invalidHobby) GT 0>
 				<cfset arrayAppend(local.errors, "*The hobby must be one of the following" )>
 			<cfelse>
-				 <cfquery name="local.getHobbyIds">
+				 <cfquery name="local.getHobbyIds" dbtype="query">
             				SELECT 
                 				idhobby 
             				FROM 
-                				hobbies_sample
+                				application.hobbyquery
             				WHERE 
                 				hobby_name IN (<cfqueryparam value="#arguments.hobbiesName#" cfsqltype="cf_sql_varchar" list="true">)
         			</cfquery>
@@ -479,7 +502,6 @@
 	<cffunction name="createOrUpdateContact" access="public">
 		
 		<cfargument name="title" type="string" required="true">
-		
 		<cfargument name="firstName" type="string" required="true">
         	<cfargument name="lastName" type="string" required="true">
         	<cfargument name="gender" type="string" required="true">
@@ -491,7 +513,7 @@
 		<cfargument name="email" type="string" required="true">
 		<cfargument name="phone" type="string" required="true">
 		<cfargument name="hobbies" type="string" required="false">
-		<cfargument name="is_public" type="string" required="true">
+		<cfargument name="is_public" type="numeric" required="true">
 		<cfargument name="contactId" type="string" required="false" default="">
 		<cfargument name="is_excel" type="numeric" required="false">
 		

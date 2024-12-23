@@ -15,6 +15,7 @@
 		headerrow = "1"> 
 
 	
+<<<<<<< Updated upstream
 	<cfset excelDataArray = []>
 	<cfloop from="2" to="#excelData.recordCount#" index="i">
 		<cfset rowStruct = {
@@ -30,6 +31,46 @@
 			"phone": excelData.PHONE[i],
 			"hobbies": excelData.HOBBIES[i],
 			"is_public": excelData.PUBLIC[i]
+=======
+
+	<cfset application.titleQuery = application.userService.getTitleName()>
+	<cfset application.genderQuery = application.userService.getGenderName()>
+	<cfset application.hobbyQuery = application.userService.getHobbyName()>
+	
+
+	<cfloop query = "excelData">
+		<cfset result = application.userService.validateAddEditContactDetails(titleName = excelData.TITLE,
+        									firstName = excelData.FIRSTNAME,
+        									lastName = excelData.LASTNAME,
+       	 									genderName = excelData.GENDER,
+        									dob = excelData.DOB,
+        									address = excelData.ADDRESS,
+        									street = excelData.STREET,
+        									pincode = excelData.PINCODE,
+        									email = excelData.EMAIL,
+        									phone = excelData.PHONE,
+        									hobbiesName = excelData.HOBBIES,
+        									is_public = excelData.PUBLIC,
+										is_excel = 1
+		
+    		)>
+		<cfset excelDetails =  {
+			"titleName" : excelData.TITLE,
+			"firstName" : excelData.FIRSTNAME,
+			"lastName" : excelData.LASTNAME,
+			"genderName" : excelData.GENDER,
+			"dob" : excelData.DOB,
+			"address" : excelData.ADDRESS,
+			"street" : excelData.STREET,
+        		"pincode" : excelData.PINCODE,
+        		"email" : excelData.EMAIL,
+        		"phone" : excelData.PHONE,
+        		"hobbiesName" : excelData.HOBBIES,
+        		"is_public" : excelData.PUBLIC,
+			"is_excel": 1,
+			"remarks" : ""
+		
+>>>>>>> Stashed changes
 		}>
 		<cfset arrayAppend(excelDataArray, rowStruct)>
 	</cfloop>

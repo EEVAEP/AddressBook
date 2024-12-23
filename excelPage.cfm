@@ -14,11 +14,12 @@
 	<cfset spreadsheetSetCellValue(spreadsheetObj, "LASTNAME", 1, 3)>
 	<cfset spreadsheetSetCellValue(spreadsheetObj, "GENDER", 1, 4)>
 	<cfset spreadsheetSetCellValue(spreadsheetObj, "DOB", 1, 5)>
-	<cfset spreadsheetSetCellValue(spreadsheetObj, "EMAIL", 1, 6)>
-	<cfset spreadsheetSetCellValue(spreadsheetObj, "PHONE", 1, 7)>
-	<cfset spreadsheetSetCellValue(spreadsheetObj, "STREET",1,8)>
-	<cfset spreadsheetSetCellValue(spreadsheetObj, "PINCODE",1,9)>
-	<cfset spreadsheetSetCellValue(spreadsheetObj, "HOBBIES", 1,10)>
+	<cfset spreadsheetSetCellValue(spreadsheetObj, "ADDRESS", 1, 6)>
+	<cfset spreadsheetSetCellValue(spreadsheetObj, "EMAIL", 1, 7)>
+	<cfset spreadsheetSetCellValue(spreadsheetObj, "PHONE", 1, 8)>
+	<cfset spreadsheetSetCellValue(spreadsheetObj, "STREET",1,9)>
+	<cfset spreadsheetSetCellValue(spreadsheetObj, "PINCODE",1,10)>
+	<cfset spreadsheetSetCellValue(spreadsheetObj, "HOBBIES", 1,11)>
 
 	<cfset SpreadsheetFormatRow (spreadsheetObj, dataHead, 1)>
 	
@@ -31,11 +32,12 @@
 		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].lastname#", i+1, 3)>
 		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].gendername#", i+1, 4)>
 		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].dob#", i+1, 5)>
-		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].email#", i+1, 6)>
-		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].phone#", i+1, 7)>
-		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].street#", i+1, 8)>
-		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].pincode#", i+1, 9)>
-		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].hobbyNames#", i+1, 10)>
+		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].address#", i+1, 6)>
+		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].email#", i+1, 7)>
+		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].phone#", i+1, 8)>
+		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].street#", i+1, 9)>
+		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].pincode#", i+1, 10)>
+		<cfset spreadsheetSetCellValue(spreadsheetObj, "#contactData[i].hobbyNames#", i+1, 11)>
 
 		<cfset SpreadsheetSetRowHeight(spreadsheetObj,i+1,20)>
 	</cfloop>
@@ -57,6 +59,7 @@
 	<cfset SpreadSheetSetColumnWidth(spreadsheetobj,8,35)>
 	<cfset SpreadSheetSetColumnWidth(spreadsheetobj,9,25)>
 	<cfset SpreadSheetSetColumnWidth(spreadsheetobj,10,20)>
+	<cfset SpreadSheetSetColumnWidth(spreadsheetobj,11,20)>
 	
 
 	<cfset binary = SpreadsheetReadBinary(spreadsheetObj)>
