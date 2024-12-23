@@ -204,9 +204,18 @@
 		<cfargument name="email" type="string" required="true">
 		<cfargument name="phone" type="string" required="true">
 		<cfargument name="hobbies" type="string" required="false">
+<<<<<<< HEAD
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 		<cfargument name="hobbiesName" type="string" required="true">
+=======
+		<cfargument name="hobbiesName" type="string" required="false">
+>>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 		<cfargument name="is_public" type="string" required="true">
+=======
+		<cfargument name="hobbiesName" type="string" required="false">
+		<cfargument name="is_public" type="numeric" required="true">
+>>>>>>> Stashed changes
 =======
 		<cfargument name="hobbiesName" type="string" required="false">
 		<cfargument name="is_public" type="numeric" required="true">
@@ -215,13 +224,24 @@
 		<cfargument name="is_excel" type="numeric" required="false">
 
 		
-		<cfset local.errors = []>
+		
+		<cfset local.result = {
+			"errors" : [],
+			"remarks" : ""
+		}>
 
 	
+<<<<<<< HEAD
 		
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     		<cfset local.titleQuery = getTitleName()>
+=======
+		<cfset local.titleQuery = getTitleName()>
+>>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 		<cfif structKeyExists(arguments, "title")>
@@ -230,7 +250,7 @@
         			<cfset arrayAppend(local.validTitles, application.titleQuery.idtitle)>
     			</cfloop>
 			<cfif NOT arrayContains(local.validTitles, arguments.title)>
-        			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitles, ", "))>
+        			<cfset arrayAppend(local.result.errors, "*The title must be one of the following: " & arrayToList(local.validTitles, ", "))>
     			</cfif>
 		</cfif>
 		<cfif structKeyExists(arguments, "titleName")>
@@ -239,7 +259,7 @@
         			<cfset arrayAppend(local.validTitleNames, application.titleQuery.titlename)>
     			</cfloop>
 			<cfif NOT arrayContains(local.validTitleNames, arguments.titleName)>
-        			<cfset arrayAppend(local.errors, "*The title must be one of the following: " & arrayToList(local.validTitleNames, ", "))>
+        			<cfset arrayAppend(local.result.errors, "*The title must be one of the following: " & arrayToList(local.validTitleNames, ", "))>
 			<cfelse>
 				<cfquery name="local.getTitleId" dbtype="query">
             				SELECT 
@@ -250,7 +270,7 @@
                 				titlename = <cfqueryparam value="#arguments.titleName#" cfsqltype="cf_sql_varchar">
         			</cfquery>
 				<cfif local.getTitleId.recordCount EQ 1>
-            				<cfset arguments['title'] = local.getTitleId.idtitle>
+            				<cfset arguments['title'] = local.getTitleName.idtitle>
 				</cfif>
     			</cfif>
 		</cfif>
@@ -258,16 +278,16 @@
 			
 
 		<cfif trim(arguments.firstName) EQ "">
-        		<cfset arrayAppend(local.errors, "*First Name is required.")>
+        		<cfset arrayAppend(local.result.errors, "*First Name is required.")>
     		<cfelseif not reFind("^[A-Za-z]+$", trim(arguments.firstName))>
-        		<cfset arrayAppend(local.errors, "*First Name cannot contain numbers or special characters.")>
+        		<cfset arrayAppend(local.result.errors, "*First Name cannot contain numbers or special characters.")>
     		</cfif>
 
 
 		<cfif trim(arguments.lastName) EQ "">
-    			<cfset arrayAppend(local.errors, "*Last Name is required.")>
+    			<cfset arrayAppend(local.result.errors, "*Last Name is required.")>
 		<cfelseif not reFind("^[A-Za-z]+(\s[A-Za-z]+)*$", trim(arguments.lastName))>
-    			<cfset arrayAppend(local.errors, "*Last Name cannot contain numbers or special characters.")>
+    			<cfset arrayAppend(local.result.errors, "*Last Name cannot contain numbers or special characters.")>
 		</cfif>
 
 
@@ -279,7 +299,7 @@
 				<cfset arrayAppend(local.validGender, application.genderQuery.idgender)>
 			</cfloop>
 			<cfif NOT arrayContains(local.validGender, arguments.gender)>
-				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
+				<cfset arrayAppend(local.result.errors, "*Enter a valid gender")>
 			</cfif>	
 		</cfif>
 		<cfif structKeyExists(arguments, "genderName")>
@@ -288,7 +308,7 @@
 				<cfset arrayAppend(local.validGenderName, application.genderQuery.gendername)>
 			</cfloop>
 			<cfif NOT arrayContains(local.validGenderName, arguments.genderName)>
-				<cfset arrayAppend(local.errors, "*Enter a valid gender")>
+				<cfset arrayAppend(local.result.errors, "*Enter a valid gender")>
 			<cfelse>
 				<cfquery name="local.getGenderId" dbtype="query">
             				SELECT 
@@ -309,7 +329,7 @@
 
 
 		<cfif not isDate(arguments.dob)>
-        		<cfset arrayAppend(local.errors, "*Date of Birth must be a valid date.")>
+        		<cfset arrayAppend(local.result.errors, "*Date of Birth must be a valid date.")>
     		</cfif>
 
 
@@ -325,7 +345,7 @@
     			<cfset local.imageExtension = ListLast(local.originalFileName, ".")> 
 		
 			<cfif NOT ListFindNoCase(local.allowedFormats, local.imageExtension)>
-        			<cfset arrayAppend(local.errors, "*Invalid image format. Only JPG, JPEG, JFIF and PNG are allowed")>
+        			<cfset arrayAppend(local.result.errors, "*Invalid image format. Only JPG, JPEG, JFIF and PNG are allowed")>
 			<cfelse>
 				<cfset local.uploadPath = ExpandPath('./Temp/')>
 				<cffile action="upload" fileField="photo" destination="#local.uploadPath#" nameConflict="makeUnique" result="local.fileUploadResult">
@@ -352,25 +372,25 @@
 			<cfset arguments['photo'] = local.photopath>
 		<cfelse>
 			<cfif NOT structKeyExists(arguments, "is_excel") OR arguments.is_excel NEQ 1>
-				<cfset arrayAppend(local.errors, "*Image is required")>
+				<cfset arrayAppend(local.result.errors, "*Image is required")>
 			</cfif>
 		</cfif>
 
 
 
 		<cfif trim(arguments.address) EQ "">
-			<cfset arrayAppend(local.errors, "*Address is required.")>
+			<cfset arrayAppend(local.result.errors, "*Address is required.")>
 		</cfif>
 
 		
 		<cfif trim(arguments.street) EQ "">
-			<cfset arrayAppend(local.errors, "*Street is required.")>
+			<cfset arrayAppend(local.result.errors, "*Street is required.")>
 		</cfif>
 
 		<cfif trim(arguments.pincode) EQ "" OR (NOT isNumeric(arguments.pincode))>
-			<cfset arrayAppend(local.errors, "*pincode must be numeric")>
+			<cfset arrayAppend(local.result.errors, "*pincode must be numeric")>
 		<cfelseif len(arguments.pincode) GT 8>
-			<cfset arrayAppend(local.errors, "*pincode length must be less than 9")>
+			<cfset arrayAppend(local.result.errors, "*pincode length must be less than 9")>
 		</cfif>
 
 		
@@ -385,11 +405,17 @@
 		</cfquery>
 		
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 		<cfif local.getContactEmail.recordCount GT 0 AND NOT structKeyExists(arguments, 'contactId')>
+<<<<<<< HEAD
 			<cfset arrayAppend(local.errors, "*Email already exists")>
 =======
+=======
+>>>>>>> Stashed changes
 		
 		<cfif local.getContactEmail.recordCount GT 0 AND (NOT structKeyExists(arguments, 'contactId') OR len(trim(arguments.contactId)) EQ 0)>
+=======
+>>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 			
 			<cfif NOT structKeyExists(arguments, "is_excel")>
 				<cfset arrayAppend(local.result.errors, "*Email already exists")>
@@ -397,25 +423,31 @@
 				<cfset local.result.remarks = "UPDATED">
 				<cfset arguments['contactId'] = local.getContactEmail.idcontact>
 			</cfif>
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 		<cfelseif len(trim(arguments.email)) EQ 0>
-			<cfset arrayAppend(local.errors, "*Email is required")>
+			<cfset arrayAppend(local.result.errors, "*Email is required")>
 		<cfelseif NOT reFindNoCase("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", arguments.email)>
-            		<cfset arrayAppend(local.errors, "*Enter a valid email")>
+            		<cfset arrayAppend(local.result.errors, "*Enter a valid email")>
+		<cfelse>
+			<cfset local.result.remarks = "ADDED">
+			
 		</cfif>
 
 		
 
 		<cfif trim(arguments.phone) EQ "" OR not reFind("^\d{10}$", arguments.phone)>
 			
-    			<cfset arrayAppend(local.errors, "*Phone number must contain exactly 10 digits.")>
+    			<cfset arrayAppend(local.result.errors, "*Phone number must contain exactly 10 digits.")>
 		</cfif>
 		
 
-		<!---<cfif structKeyExists(arguments, "hobbies")>
+		<cfif structKeyExists(arguments, "hobbies")>
 			
 			<cfif Len(arguments.hobbies) EQ 0>
-				<cfset arrayAppend(local.errors, "*Hobby is required")>
+				<cfset arrayAppend(local.result.errors, "*Hobby is required")>
 			<cfelse>
 				<cfset local.validHobbies = []>
 				
@@ -425,27 +457,37 @@
 				<cfset local.selectedHobbiesArray = ListToArray(arguments.hobbies, ",")>
 				<cfloop array="#local.selectedHobbiesArray#" index="local.hobbyID">
         				<cfif NOT arrayContains(local.validHobbies, local.hobbyID)>
-            					<cfset arrayAppend(local.errors, "*Invalid hobby selected: " & local.hobbyID)>
+            					<cfset arrayAppend(local.result.errors, "*Invalid hobby selected: " & local.hobbyID)>
         				</cfif>
     				</cfloop>
 
 			</cfif>
-		</cfif>--->
+		</cfif>
+
 		<cfif structKeyExists(arguments, "hobbiesName")>
 			<cfset local.validHobbiesName = []>
 			<cfset local.validHobbiesList = valueList(application.hobbyQuery.hobby_name)>
 			<cfset local.invalidHobby = []>
+<<<<<<< HEAD
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 			<cfset local.HobbiesArray = ListToArray(arguments.hobbiesName)>
+=======
+>>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 			
-			<cfloop array="#local.HobbiesArray#" index="hobby">
-				
-        			<cfif NOT listFindNoCase(local.validHobbiesList, hobby)>
-					<cfset arrayAppend(local.invalidHobby, hobby)>
+			
+			<cfloop list="#arguments.hobbiesName#" index="local.i">
+				<cfset local.i = trim(local.i)>
+        			<cfif NOT listFindNoCase(local.validHobbiesList, local.i)>
+					
+					<cfset arrayAppend(local.invalidHobby, local.i)>
 				</cfif>
+				
         			
     			</cfloop>
 =======
+=======
+>>>>>>> Stashed changes
 			<cfloop list="#arguments.hobbiesName#" index="local.i">
 				<cfset local.i = trim(local.i)>
         			<cfif NOT listFindNoCase(local.validHobbiesList, local.i)>
@@ -453,10 +495,13 @@
 					<cfset arrayAppend(local.invalidHobby, local.i)>
 				</cfif>
 			</cfloop>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 			
 			<cfif arrayLen(local.invalidHobby) GT 0>
-				<cfset arrayAppend(local.errors, "*The hobby must be one of the following" )>
+				<cfset arrayAppend(local.result.errors, "*Enter a valid hobby")>
 			<cfelse>
 				 <cfquery name="local.getHobbyIds" dbtype="query">
             				SELECT 
@@ -471,27 +516,24 @@
            				<cfset arguments['hobbies'] = local.hobbyIdList>
 				</cfif>
 			
-			</cfif>
+			</cfif>  
 		</cfif>
 		
 
-
-
-
 		<cfset local.isValidPublic  = ["0", "1"]>
 		<cfif NOT ArrayContains(local.isValidPublic, arguments.is_public)>
-			<cfset arrayAppend(local.errors, "*Invalid value for Public")>
+			<cfset arrayAppend(local.result.errors, "*Invalid value for Public")>
 		</cfif>
 		   
 		
 
-		<cfif arrayLen(local.errors) EQ 0>
+		<cfif arrayLen(local.result.errors) EQ 0>
 			
 			<cfset local.addUser=createOrUpdateContact(argumentCollection=arguments)>
 				
-			<cfreturn local.errors>
+			<cfreturn local.result>
 		<cfelse>
-			<cfreturn local.errors>
+			<cfreturn local.result>
 		
 		</cfif>
 		
@@ -520,9 +562,12 @@
 		
 		
 		
-		<cfif StructKeyExists(arguments, "contactId") AND arguments.contactId NEQ "">
-			
-			<cfset local.decryptedId = decryptId(arguments.contactId)>
+		<cfif StructKeyExists(arguments, "contactId") AND arguments.contactId NEQ "" >
+			<cfif NOT structKeyExists(arguments, "is_excel")>
+				<cfset local.decryptedId = decryptId(arguments.contactId)>
+			<cfelse>
+				<cfset local.decryptedId = arguments.contactId>
+			</cfif>
 			<cfquery>
         			UPDATE contact
 				SET 
