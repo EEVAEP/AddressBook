@@ -204,22 +204,8 @@
 		<cfargument name="email" type="string" required="true">
 		<cfargument name="phone" type="string" required="true">
 		<cfargument name="hobbies" type="string" required="false">
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-		<cfargument name="hobbiesName" type="string" required="true">
-=======
-		<cfargument name="hobbiesName" type="string" required="false">
->>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
-		<cfargument name="is_public" type="string" required="true">
-=======
 		<cfargument name="hobbiesName" type="string" required="false">
 		<cfargument name="is_public" type="numeric" required="true">
->>>>>>> Stashed changes
-=======
-		<cfargument name="hobbiesName" type="string" required="false">
-		<cfargument name="is_public" type="numeric" required="true">
->>>>>>> Stashed changes
 		<cfargument name="contactId" type="string" required="false">
 		<cfargument name="is_excel" type="numeric" required="false">
 
@@ -231,19 +217,7 @@
 		}>
 
 	
-<<<<<<< HEAD
 		
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    		<cfset local.titleQuery = getTitleName()>
-=======
-		<cfset local.titleQuery = getTitleName()>
->>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 		<cfif structKeyExists(arguments, "title")>
 			<cfset local.validTitles = []>
     			<cfloop query="application.titleQuery">
@@ -270,7 +244,7 @@
                 				titlename = <cfqueryparam value="#arguments.titleName#" cfsqltype="cf_sql_varchar">
         			</cfquery>
 				<cfif local.getTitleId.recordCount EQ 1>
-            				<cfset arguments['title'] = local.getTitleName.idtitle>
+            				<cfset arguments['title'] = local.getTitleId.idtitle>
 				</cfif>
     			</cfif>
 		</cfif>
@@ -404,18 +378,8 @@
 				email = <cfqueryparam value="#arguments.email#" cfsqltype="cf_sql_varchar">
 		</cfquery>
 		
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-		<cfif local.getContactEmail.recordCount GT 0 AND NOT structKeyExists(arguments, 'contactId')>
-<<<<<<< HEAD
-			<cfset arrayAppend(local.errors, "*Email already exists")>
-=======
-=======
->>>>>>> Stashed changes
 		
 		<cfif local.getContactEmail.recordCount GT 0 AND (NOT structKeyExists(arguments, 'contactId') OR len(trim(arguments.contactId)) EQ 0)>
-=======
->>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 			
 			<cfif NOT structKeyExists(arguments, "is_excel")>
 				<cfset arrayAppend(local.result.errors, "*Email already exists")>
@@ -423,10 +387,6 @@
 				<cfset local.result.remarks = "UPDATED">
 				<cfset arguments['contactId'] = local.getContactEmail.idcontact>
 			</cfif>
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
 		<cfelseif len(trim(arguments.email)) EQ 0>
 			<cfset arrayAppend(local.result.errors, "*Email is required")>
 		<cfelseif NOT reFindNoCase("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", arguments.email)>
@@ -468,26 +428,6 @@
 			<cfset local.validHobbiesName = []>
 			<cfset local.validHobbiesList = valueList(application.hobbyQuery.hobby_name)>
 			<cfset local.invalidHobby = []>
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-			<cfset local.HobbiesArray = ListToArray(arguments.hobbiesName)>
-=======
->>>>>>> 369ee314bf05dd39e49cc2b8b9399a4e16a3c6d4
-			
-			
-			<cfloop list="#arguments.hobbiesName#" index="local.i">
-				<cfset local.i = trim(local.i)>
-        			<cfif NOT listFindNoCase(local.validHobbiesList, local.i)>
-					
-					<cfset arrayAppend(local.invalidHobby, local.i)>
-				</cfif>
-				
-        			
-    			</cfloop>
-=======
-=======
->>>>>>> Stashed changes
 			<cfloop list="#arguments.hobbiesName#" index="local.i">
 				<cfset local.i = trim(local.i)>
         			<cfif NOT listFindNoCase(local.validHobbiesList, local.i)>
@@ -495,10 +435,6 @@
 					<cfset arrayAppend(local.invalidHobby, local.i)>
 				</cfif>
 			</cfloop>
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 			
 			<cfif arrayLen(local.invalidHobby) GT 0>
 				<cfset arrayAppend(local.result.errors, "*Enter a valid hobby")>

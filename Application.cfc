@@ -11,6 +11,9 @@
     	<cffunction name="onApplicationStart" returnType="boolean">
 		<cfset application.userService = createObject("component","components.db")>
 		<cfset application.encryptionKey = generateSecretKey("AES")>
+		<!---<cfset application.titleQuery = application.userService.getTitleName()>
+		<cfset application.genderQuery = application.userService.getGenderName()>
+		<cfset application.hobbyQuery = application.userService.getHobbyName()>--->
 		<cfreturn true>
     	</cffunction>
 	
